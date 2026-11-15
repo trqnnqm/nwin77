@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NWIN77 - Tài Xỉu Đỉnh Cao</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; user-select: none; }
+    
+    body { 
+      min-height: 100vh; display: flex; justify-content: center; align-items: center; 
+      background: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat; 
+      color: #fff; overflow: hidden; 
+    }
+
+    /* --- TOAST NOTIFICATION --- */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 99999; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: rgba(15, 25, 35, 0.95); border-left: 5px solid #00d2ff;
+      color: #fff; padding: 15px 25px; border-radius: 8px; font-weight: bold;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5); transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { border-left-color: #2ecc71; }
+    .toast.error { border-left-color: #e74c3c; }
+
+    /* --- AUTH --- */
+    #auth-landing {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
+    }
+    #auth-landing.hide { display: none; }
+    .logo-nwin { font-size: 6rem; font-weight: 900; font-style: italic; background: linear-gradient(to bottom, #00d2ff, #0056b3); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 50px; text-shadow: 0 0 40px rgba(0, 210, 255, 0.6); letter-spacing: 2px; }
+    .auth-buttons { display: flex; gap: 30px; }
+    .btn-main-auth { padding: 18px 50px; border-radius: 50px; font-size: 1.3rem; font-weight: bold; cursor: pointer; border: 2px solid #fff; transition: 0.3s; background: rgba(0, 0, 0, 0.6); color: #fff; }
+    .btn-login { border-color: #00d2ff; color: #00d2ff; text-shadow: 0 0 10px #00d2ff; }
+    .btn-login:hover { background: #00d2ff; color: #000; box-shadow: 0 0 30px #00d2ff; }
+    .btn-register { border-color: #ffd700; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+    .btn-register:hover { background: #ffd700; color: #000; box-shadow: 0 0 30px #ffd700; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 3000; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
+    .modal-content {
+      background: rgba(15, 25, 35, 0.98); border: 2px solid #00d2ff; border-radius: 24px;
+      width: 400px; padding: 40px 30px; position: relative; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      transform: scale(0.85); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.show .modal-content { transform: scale(1); }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; font-weight: bold; color: #ff4757; cursor: pointer; }
+    .form-title { text-align: center; font-size: 1.8rem; font-weight: bold; margin-bottom: 25px; color: #00d2ff; }
+    .auth-input { width: 100%; padding: 12px 15px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; margin-bottom: 15px; outline: none; font-size: 0.95rem; }
+    .auth-input:focus { border-color: #00d2ff; }
+    .captcha-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .captcha-row input { margin-bottom: 0; flex: 1; }
+    .captcha-img { background: #222; border: 1px dashed #00d2ff; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; letter-spacing: 3px; color: #ff4757; cursor: pointer; text-decoration: line-through; }
+    .btn-submit { width: 100%; padding: 14px; background: linear-gradient(to bottom, #00d2ff, #0056b3); border: none; border-radius: 10px; font-weight: bold; font-size: 1.1rem; cursor: pointer; color: #fff; margin-top: 10px; }
+
+    /* --- TASKBAR & PROFILE --- */
+    .nav-taskbar {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 10px; z-index: 1000;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
+      border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50px;
+      padding: 8px 15px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .nav-item { color: #fff; text-decoration: none; font-weight: bold; font-size: 0.95rem; padding: 8px 20px; border-radius: 30px; cursor: pointer; transition: 0.3s; }
+    .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.2); color: #00d2ff; text-shadow: 0 0 10px #00d2ff; }
+
+    .user-profile {
+      position: fixed; bottom: 20px; left: 20px; z-index: 1000;
+      display: flex; align-items: center; gap: 15px; cursor: pointer;
+      background: rgba(15, 25, 35, 0.9); border: 1px solid rgba(0, 210, 255, 0.3); border-radius: 50px; padding: 8px 25px 8px 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: 0.3s;
+    }
+    .user-profile:hover { border-color: #00d2ff; transform: translateY(-2px); }
+    .avatar-pill { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #00d2ff; }
+    .info-pill { display: flex; flex-direction: column; }
+    .name-pill { font-size: 1.1rem; font-weight: bold; }
+    .balance-pill { font-size: 1rem; color: #ffd700; font-weight: bold; }
+    .balance-pill span { font-size: 0.8rem; color: #aaa; }
+
+    .btn-telegram {
+      position: fixed; bottom: 20px; right: 20px; z-index: 1000;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: #0088cc; border: 3px solid #fff; color: #fff;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 2rem; cursor: pointer; text-decoration: none;
+      box-shadow: 0 0 20px rgba(0, 136, 204, 0.6); transition: 0.3s; animation: pulse 2s infinite;
+    }
+    .btn-telegram:hover { transform: scale(1.1); background: #00a8ff; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(0, 136, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 136, 204, 0); } }
+
+    #settings-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 4000; }
+    .settings-box { background: rgba(15, 25, 35, 0.98); border: 2px solid #00d2ff; border-radius: 20px; width: 400px; padding: 30px; position: relative; text-align: center; }
+    .settings-box h2 { color: #00d2ff; margin-bottom: 20px; }
+    .btn-save { background: #00d2ff; color: #000; margin-bottom: 20px; }
+    .btn-logout { background: transparent; border: 2px solid #ff4757; color: #ff4757; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+    .btn-logout:hover { background: #ff4757; color: #fff; }
+
+    /* --- SẢNH CHÍNH --- */
+    #main-lobby { display: none; width: 100%; max-width: 1200px; height: 100vh; padding-top: 100px; flex-direction: column; align-items: center; }
+    .welcome-card {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(0, 210, 255, 0.1));
+      border: 2px solid #d4af37; border-radius: 20px; padding: 20px 40px; text-align: center; margin-bottom: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.2); animation: floatCard 4s ease-in-out infinite;
+    }
+    @keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .welcome-card h1 { font-size: 2.5rem; color: #ffd700; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); margin-bottom: 5px; }
+    .welcome-card p { font-size: 1.2rem; color: #00d2ff; font-weight: bold; letter-spacing: 1px; }
+
+    .game-list { flex: 1; display: flex; justify-content: center; align-items: center; }
+    .game-card { width: 280px; height: 350px; background: linear-gradient(135deg, rgba(13,43,61,0.9), rgba(26,92,122,0.9)); border: 3px solid #00d2ff; border-radius: 20px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: 0.3s; }
+    .game-card:hover { transform: translateY(-10px) scale(1.02); box-shadow: 0 20px 40px rgba(0, 210, 255, 0.6); }
+    .game-card h2 { font-size: 3.5rem; font-style: italic; text-align: center; line-height: 1.1; } 
+    .game-card h2 span { color: #00d2ff; font-size: 4rem; }
+
+    /* --- GAME POPUP --- */
+    #popup { 
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+      width: 800px; z-index: 50; display: none; flex-direction: column; align-items: center; 
+      background: rgba(10, 15, 20, 0.95); padding: 20px; border-radius: 20px; border: 1px solid #00d2ff; box-shadow: 0 0 40px rgba(0, 210, 255, 0.4); 
+    }
+    #popup.show { display: flex; }
+    
+    .drag-bar-container { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; position: relative; }
+    .drag-bar { width: 50%; height: 25px; cursor: grab; display: flex; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); border-radius: 10px; border: 1px solid #00d2ff; }
+    .close-btn-game { position: absolute; top: 0px; right: 10px; color: #ff4757; font-weight: bold; cursor: pointer; font-size: 1.5rem; }
+    
+    .board { 
+      width: 100%; height: 280px; background: linear-gradient(135deg, #0d2b3d, #051a26); 
+      border: 4px solid #00d2ff; border-radius: 140px; position: relative; display: flex; justify-content: space-between; align-items: center; padding: 0 60px; 
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 20px rgba(0, 210, 255, 0.3); 
+    }
+    .session-id { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: #000; border: 1px solid #00d2ff; color: #00d2ff; padding: 5px 20px; border-radius: 15px; font-weight: bold; }
+    .side { width: 30%; display: flex; flex-direction: column; align-items: center; z-index: 2; }
+    .side h1 { font-size: 4rem; font-weight: 900; font-style: italic; margin-bottom: 5px; transition: 0.3s; }
+    .title-tai { color: #000; text-shadow: 0 0 10px #fff; } .title-xiu { color: #fff; text-shadow: 0 0 10px #1e90ff; }
+    .bet-amt { font-size: 1.2rem; font-weight: bold; color: #ffd700; margin-bottom: 10px; height: 25px; }
+    
+    .btn-bet { padding: 8px 30px; border-radius: 20px; background: linear-gradient(to bottom, #00d2ff, #0056b3); border: 2px solid #fff; color: #fff; font-weight: bold; cursor: pointer; width: 130px; transition: 0.2s; }
+    .btn-bet.sel { background: linear-gradient(to bottom, #e74c3c, #c0392b); }
+    
+    .win-effect h1 { color: #ffd700 !important; animation: win-text 0.2s infinite alternate; }
+    @keyframes win-text { 0% { transform: scale(1); text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700; } 100% { transform: scale(1.15); text-shadow: 0 0 30px #fff, 0 0 50px #ffd700; } }
+    .particle { position: absolute; width: 10px; height: 10px; background: #ffd700; border-radius: 50%; pointer-events: none; z-index: 100; animation: explode 1s ease-out forwards; }
+    @keyframes explode { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; } }
+
+    /* VÙNG CHỨA TIMER, XÚC XẮC, BÁT */
+    .center-area { 
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); 
+      width: 160px; height: 160px; display: flex; justify-content: center; align-items: center; 
+      z-index: 10; perspective: 1000px; 
+    }
+    
+    .timer-circle { 
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; border: 4px solid #00d2ff; border-radius: 50%; 
+      display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 20px #00d2ff; 
+      transition: opacity 0.3s; z-index: 1;
+    }
+    #timer { font-size: 4rem; font-weight: 900; color: #ffd700; text-shadow: 0 0 10px #ffd700; }
+
+    /* XÚC XẮC */
+    .dice-box { 
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 12; 
+      display: none; justify-content: center; align-items: center; transform-style: preserve-3d; 
+    }
+    .dice { width: 60px; height: 60px; background: #fff; border-radius: 12px; position: absolute; transform-style: preserve-3d; }
+    .dice:nth-child(1) { top: 10px; left: 50px; } 
+    .dice:nth-child(2) { top: 80px; left: 10px; } 
+    .dice:nth-child(3) { top: 80px; right: 10px; }
+    
+    .dot { position: absolute; width: 12px; height: 12px; background: #000; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); }
+    .dot.red { background: #e74c3c; }
+    .d-center { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .d-tl { top: 15%; left: 15%; } .d-tr { top: 15%; right: 15%; } .d-bl { bottom: 15%; left: 15%; } .d-br { bottom: 15%; right: 15%; }
+    .d-ml { top: 50%; left: 15%; transform: translateY(-50%); } .d-mr { top: 50%; right: 15%; transform: translateY(-50%); }
+
+    .rolling { animation: tumble3D 0.4s infinite linear; }
+    @keyframes tumble3D { 0% { transform: translateY(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); } 25% { transform: translateY(-40px) rotateX(180deg) rotateY(90deg) rotateZ(90deg) scale(1.1); } 50% { transform: translateY(20px) rotateX(360deg) rotateY(180deg) rotateZ(180deg) scale(0.9); } 75% { transform: translateY(-20px) rotateX(540deg) rotateY(270deg) rotateZ(270deg) scale(1.05); } 100% { transform: translateY(0) rotateX(720deg) rotateY(360deg) rotateZ(360deg) scale(1); } }
+
+    /* BÁT (Lớn hơn để che kín xúc xắc) */
+    .bowl-box { 
+      position: absolute; top: -20px; left: -20px; width: 200px; height: 200px; z-index: 15; 
+      display: none; cursor: grab; transition: transform 0.4s ease-out, opacity 0.4s;
+    }
+    .bowl { width: 100%; height: 100%; background: linear-gradient(135deg, #00d2ff, #0056b3); border-radius: 50%; border: 4px solid #fff; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+    .bowl.hide { transform: translateY(-200px) scale(0.8); opacity: 0; pointer-events: none; }
+    .hint { position: absolute; bottom: -50px; color: #ffd700; font-size: 1.2rem; font-weight: bold; animation: blink 1s infinite; display: none; width: 200px; text-align: center; text-shadow: 0 0 10px #000; z-index: 20; }
+    @keyframes blink { 50% { opacity: 0.3; } }
+
+    .mini-chart-container { display: flex; justify-content: flex-end; align-items: center; width: 100%; margin-top: 15px; position: relative; }
+    .mini-chart { display: flex; gap: 5px; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 15px; border: 1px solid #00d2ff; min-height: 45px; flex: 1; margin-right: 70px; overflow: hidden; }
+    .h-dot { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
+    .h-dot.tai { background: #000; border: 1px solid #fff; } .h-dot.xiu { background: #fff; border: 1px solid #000; }
+    .btn-soicau-fab { position: absolute; right: 0; width: 50px; height: 50px; border-radius: 50%; background: #8e44ad; border: 2px solid #fff; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.3s; box-shadow: 0 0 15px #8e44ad; }
+    .btn-soicau-fab:hover { transform: scale(1.1) rotate(10deg); }
+
+    /* THANH ĐẶT CƯỢC */
+    #betting-panel { display: none; width: 100%; flex-direction: column; align-items: center; margin-top: 15px; }
+    .chips { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; justify-content: center; width: 100%;}
+    .chip { padding: 10px 20px; background: linear-gradient(to bottom, #1e90ff, #0056b3); border: 2px solid #fff; border-radius: 10px; color: #fff; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .actions { display: flex; gap: 15px; margin-top: 15px; width: 100%; justify-content: center; }
+    .big-btn { padding: 12px 30px; border-radius: 25px; font-size: 1.2rem; font-weight: bold; border: 2px solid #fff; cursor: pointer; }
+    .b-all { background: #8e44ad; } .b-confirm { background: #00d2ff; flex: 1; max-width: 300px;} .b-cancel { background: #e74c3c; }
+
+    #win-popup {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+      background: rgba(0, 0, 0, 0.95); border: 3px solid #ffd700; border-radius: 20px;
+      padding: 30px 60px; text-align: center; z-index: 10000;
+      box-shadow: 0 0 50px #ffd700, inset 0 0 30px rgba(255, 215, 0, 0.5);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); opacity: 0; pointer-events: none;
+    }
+    #win-popup.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    #win-title { font-size: 3.5rem; color: #ffd700; text-shadow: 0 0 20px #ffd700; animation: text-bounce 0.5s infinite alternate; margin-bottom: 10px; }
+    #win-amount { font-size: 1.8rem; color: #fff; font-weight: bold; }
+    @keyframes text-bounce { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+    /* --- SOI CẦU MODAL --- */
+    #soicau-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; background: rgba(0,0,0,0.9); z-index: 10000; }
+    .soicau-box { background: #5c3a21; border: 4px solid #d4af37; border-radius: 15px; padding: 20px; width: 95%; max-width: 800px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5); }
+    .close-soicau { position: absolute; top: 10px; right: 15px; font-size: 1.8rem; color: #ff4757; cursor: pointer; z-index: 10; font-weight: bold; text-shadow: 0 0 10px #000; }
+    .soicau-header { font-size: 1.5rem; font-weight: bold; color: #ffd700; text-shadow: 0 2px 4px #000; margin-bottom: 10px; text-transform: uppercase; }
+    .latest-info { color: #fff; font-size: 1rem; margin-bottom: 15px; font-weight: bold; text-shadow: 0 1px 2px #000;}
+    .slides-container { display: flex; width: 200%; transition: transform 0.4s ease; }
+    .slide { width: 50%; padding: 0 10px; }
+    .chart-wrapper { position: relative; width: 100%; height: 350px; background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px; border: 1px solid rgba(212, 175, 55, 0.3); }
+    #chartCanvas { width: 100%; height: 100%; }
+    .bead-plate-container { height: 180px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid #d4af37; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+    .bead-grid { display: grid; grid-template-columns: repeat(15, 1fr); gap: 5px; justify-items: center; }
+    .bead-circle { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+    .bead-circle.tai { background: #000; border: 1px solid #fff; }
+    .bead-circle.xiu { background: #fff; border: 1px solid #000; }
+    .table-container { height: 150px; overflow-y: auto; background: rgba(0,0,0,0.2); border: 1px solid #d4af37; border-radius: 10px; }
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table td { padding: 5px; border: 1px solid rgba(212, 175, 55, 0.3); text-align: center; }
+    .sum-circle { display: inline-flex; justify-content: center; align-items: center; width: 25px; height: 25px; border-radius: 50%; background: #1a1a1a; color: #ffd700; font-weight: bold; font-size: 0.85rem; border: 1px solid #d4af37; box-shadow: 0 0 5px rgba(212,175,55,0.5); }
+    .arrow-btn { position: absolute; top: 50%; transform: translateY(-50%); font-size: 2.5rem; color: #ffd700; cursor: pointer; z-index: 10; transition: 0.3s; text-shadow: 0 2px 5px #000; }
+    .arrow-btn:hover { color: #fff; transform: translateY(-50%) scale(1.2); }
+    .arrow-left { left: 10px; display: none; }
+    .arrow-right { right: 10px; }
+
+    @media(max-width:768px){#popup{width:95%; padding: 10px;}.board{height:220px;padding:0 20px;border-radius:20px;}.side h1{font-size:2.5rem;}.center-area{width:140px;height:140px;}.bowl-box{width:180px;height:180px;top:-20px;left:-20px;}.modal-content{width: 90%;}.bead-grid { grid-template-columns: repeat(10, 1fr); }.welcome-card h1{font-size: 1.8rem;} .welcome-card p {font-size: 1rem;}}
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div id="auth-landing">
+  <div class="logo-nwin">NWIN77</div>
+  <div class="auth-buttons">
+    <button class="btn-main-auth btn-login" onclick="openAuthModal('login')">ĐĂNG NHẬP</button>
+    <button class="btn-main-auth btn-register" onclick="openAuthModal('register')">ĐĂNG KÝ</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeAuthModal()">✖</span>
+    <div id="form-login-view" style="display: none;">
+      <div class="form-title">ĐĂNG NHẬP</div>
+      <input type="text" id="login-user" class="auth-input" placeholder="Tên đăng nhập...">
+      <input type="password" id="login-pass" class="auth-input" placeholder="Mật khẩu...">
+      <button class="btn-submit" onclick="doLogin()">VÀO GAME</button>
+    </div>
+    <div id="form-register-view" style="display: none;">
+      <div class="form-title">ĐĂNG KÝ</div>
+      <input type="text" id="reg-user" class="auth-input" placeholder="Tên đăng nhập...">
+      <input type="password" id="reg-pass" class="auth-input" placeholder="Mật khẩu...">
+      <input type="password" id="reg-pass-confirm" class="auth-input" placeholder="Xác nhận mật khẩu...">
+      <div class="captcha-row">
+        <input type="text" id="reg-captcha" class="auth-input" placeholder="Nhập mã...">
+        <div class="captcha-img" id="captcha-code" onclick="generateCaptcha()">ABCD</div>
+      </div>
+      <button class="btn-submit" onclick="doRegister()">TẠO TÀI KHOẢN</button>
+    </div>
+  </div>
+</div>
+
+<div class="nav-taskbar" id="nav-taskbar" style="display: none;">
+  <a class="nav-item active">Trang Chủ</a>
+  <a class="nav-item">Tài Xỉu</a>
+  <a class="nav-item">Bắn Cá</a>
+  <a class="nav-item">Nạp Tiền</a>
+</div>
+
+<a href="https://t.me/nwin77_gt_tc" target="_blank" class="btn-telegram" id="btn-telegram" style="display: none;">✈️</a>
+
+<div class="user-profile" id="user-profile" style="display: none;" onclick="openSettings()">
+  <img src="" id="ui-avatar" class="avatar-pill">
+  <div class="info-pill">
+    <div class="name-pill" id="ui-name">Player</div>
+    <div class="balance-pill"><span>Số dư: </span><span id="ui-balance">10.000.000 VND</span></div>
+  </div>
+</div>
+
+<div id="settings-modal">
+  <div class="settings-box">
+    <span class="close-modal" onclick="closeSettings()">✖</span>
+    <h2>CÀI ĐẶT TÀI KHOẢN</h2>
+    <input type="text" id="set-phone" class="auth-input" placeholder="Số điện thoại...">
+    <input type="text" id="set-telegram" class="auth-input" placeholder="Link Telegram...">
+    <input type="password" id="set-newpass" class="auth-input" placeholder="Mật khẩu mới...">
+    <button class="btn-submit btn-save" onclick="saveSettings()">LƯU THAY ĐỔI</button>
+    <button class="btn-logout" onclick="doLogout()">ĐĂNG XUẤT</button>
+  </div>
+</div>
+
+<div id="main-lobby">
+  <div class="welcome-card">
+    <h1>WELCOME TO NWIN77</h1>
+    <p>nwin77.gt.tc</p>
+  </div>
+
+  <div class="game-list">
+    <div class="game-card" onclick="document.getElementById('popup').classList.add('show')">
+      <h2>TÀI XỈU<br><span>MD5</span></h2>
+    </div>
+  </div>
+</div>
+
+<div id="popup">
+  <div class="drag-bar-container">
+    <div class="drag-bar" id="drag-bar"><div style="width:50px;height:5px;background:#00d2ff;border-radius:5px;"></div></div>
+    <div class="close-btn-game" onclick="document.getElementById('popup').classList.remove('show')">✖</div>
+  </div>
+  
+  <div class="board">
+    <div class="session-id" id="session-id">PHIÊN #1</div>
+    <div class="side" id="side-tai">
+      <h1 class="title-tai">TÀI</h1>
+      <div class="bet-amt" id="amt-tai">0</div>
+      <button class="btn-bet" id="btn-tai" onclick="sel('tai')">CƯỢC</button>
+    </div>
+    
+    <div class="center-area">
+      <div class="timer-circle" id="timer-circle"><div id="timer">60</div></div>
+      
+      <div class="dice-box" id="dice-box">
+        <div class="dice" id="d1"></div>
+        <div class="dice" id="d2"></div>
+        <div class="dice" id="d3"></div>
+      </div>
+      
+      <div class="bowl-box" id="bowl-box" style="display:none;">
+        <div class="bowl" id="bowl"></div>
+      </div>
+      
+      <div class="hint" id="hint">Kéo bát để xem!</div>
+    </div>
+    
+    <div class="side" id="side-xiu">
+      <h1 class="title-xiu">XỈU</h1>
+      <div class="bet-amt" id="amt-xiu">0</div>
+      <button class="btn-bet" id="btn-xiu" onclick="sel('xiu')">CƯỢC</button>
+    </div>
+  </div>
+
+  <div class="mini-chart-container">
+    <div class="mini-chart" id="mini-chart"></div>
+    <button class="btn-soicau-fab" onclick="openSoiCau()">📊</button>
+  </div>
+
+  <div id="betting-panel">
+    <div class="chips">
+      <div class="chip" onclick="add(1000)">1K</div><div class="chip" onclick="add(10000)">10K</div><div class="chip" onclick="add(100000)">100K</div><div class="chip" onclick="add(1000000)">1M</div><div class="chip" onclick="add(10000000)">10M</div>
+    </div>
+    <div class="actions">
+      <button class="big-btn b-all" onclick="add('all')">ALL IN</button>
+      <button class="big-btn b-confirm" onclick="confirmBet()">ĐẶT CƯỢC</button>
+      <button class="big-btn b-cancel" onclick="hideBetPanel()">HỦY</button>
+    </div>
+  </div>
+</div>
+
+<div id="win-popup">
+  <h1 id="win-title">THẮNG</h1>
+  <p id="win-amount">+0 VNĐ</p>
+</div>
+
+<div id="soicau-modal">
+  <div class="soicau-box">
+    <span class="close-soicau" onclick="document.getElementById('soicau-modal').style.display='none'">✖</span>
+    <div class="soicau-header">LỊCH SỬ PHIÊN</div>
+    <div class="latest-info" id="latest-info">Chưa có dữ liệu phiên</div>
+    
+    <div class="slides-container" id="slides-container">
+      <div class="slide">
+        <div class="chart-wrapper">
+          <canvas id="chartCanvas"></canvas>
+        </div>
+      </div>
+      <div class="slide">
+        <div class="bead-plate-container">
+          <div class="bead-grid" id="bead-grid"></div>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div class="arrow-btn arrow-left" id="arrow-left" onclick="slideNext(-1)">❮</div>
+    <div class="arrow-btn arrow-right" id="arrow-right" onclick="slideNext(1)">❯</div>
+  </div>
+</div>
+
+<script>
+let user=null, betAmt=0, betSide=null, locked=false, lastIdx=-1, isBetConfirmed=false, currentResult=null;
+let historyData = []; 
+let autoOpenTimer = null;
+let currentCaptcha = "";
+let slideIndex = 0;
+let currentSum = 0, currentD1 = 0, currentD2 = 0, currentD3 = 0;
+
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerText = msg;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+}
+
+function openAuthModal(type) {
+  const modal = document.getElementById('auth-modal');
+  modal.classList.add('show');
+  document.getElementById('form-login-view').style.display = 'none';
+  document.getElementById('form-register-view').style.display = 'none';
+  if(type === 'login') document.getElementById('form-login-view').style.display = 'block';
+  else { document.getElementById('form-register-view').style.display = 'block'; generateCaptcha(); }
+}
+function closeAuthModal() { document.getElementById('auth-modal').classList.remove('show'); }
+document.getElementById('auth-modal').addEventListener('click', function(e) { if (e.target === this) closeAuthModal(); });
+
+function generateCaptcha() {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for(let i=0; i<4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  currentCaptcha = code;
+  document.getElementById('captcha-code').innerText = code;
+}
+
+function doRegister() {
+  const u = document.getElementById('reg-user').value.trim();
+  const p = document.getElementById('reg-pass').value;
+  const cp = document.getElementById('reg-pass-confirm').value;
+  const cap = document.getElementById('reg-captcha').value.trim().toUpperCase();
+
+  if(!u || !p || !cp) return showToast("Vui lòng điền đủ thông tin!", "error");
+  if(p !== cp) return showToast("Mật khẩu xác nhận không khớp!", "error");
+  if(cap !== currentCaptcha) return showToast("Mã bảo mật không đúng!", "error");
+
+  let users = JSON.parse(localStorage.getItem('nwin77_db')) || {};
+  if(users[u]) return showToast("Tài khoản đã tồn tại!", "error");
+
+  users[u] = { pass: p, balance: 10000000, phone: '', telegram: '' };
+  localStorage.setItem('nwin77_db', JSON.stringify(users));
+  showToast("Đăng ký thành công!", "success");
+  openAuthModal('login');
+  document.getElementById('login-user').value = u;
+  document.getElementById('login-pass').value = p;
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value;
+  if(!u || !p) return showToast("Nhập tài khoản và mật khẩu!", "error");
+
+  let users = JSON.parse(localStorage.getItem('nwin77_db')) || {};
+  if(!users[u] || users[u].pass !== p) return showToast("Sai tài khoản hoặc mật khẩu!", "error");
+
+  user = u;
+  closeAuthModal();
+  document.getElementById('auth-landing').classList.add('hide');
+  document.getElementById('main-lobby').style.display = 'flex';
+  document.getElementById('nav-taskbar').style.display = 'flex';
+  document.getElementById('user-profile').style.display = 'flex';
+  document.getElementById('btn-telegram').style.display = 'flex';
+  
+  document.getElementById('ui-name').innerText = u;
+  document.getElementById('ui-avatar').src = `https://api.dicebear.com/7.x/adventurer/svg?seed=${u}`;
+  updateUI();
+}
+
+function openSettings() {
+  document.getElementById('settings-modal').style.display = 'flex';
+  let u = (JSON.parse(localStorage.getItem('nwin77_db'))||{})[user];
+  document.getElementById('set-phone').value = u.phone || '';
+  document.getElementById('set-telegram').value = u.telegram || '';
+  document.getElementById('set-newpass').value = '';
+}
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+function saveSettings() {
+  let users = JSON.parse(localStorage.getItem('nwin77_db'));
+  let u = users[user];
+  u.phone = document.getElementById('set-phone').value.trim();
+  u.telegram = document.getElementById('set-telegram').value.trim();
+  let np = document.getElementById('set-newpass').value;
+  if(np) u.pass = np;
+  localStorage.setItem('nwin77_db', JSON.stringify(users));
+  showToast("Lưu thành công!", "success");
+  closeSettings();
+}
+function doLogout() { if(confirm("Đăng xuất?")) location.reload(); }
+
+function getBal() { return (JSON.parse(localStorage.getItem('nwin77_db'))||{})[user]?.balance || 0; }
+function setBal(amt) {
+  let users = JSON.parse(localStorage.getItem('nwin77_db'));
+  users[user].balance = amt;
+  localStorage.setItem('nwin77_db', JSON.stringify(users));
+  updateUI();
+}
+function updateUI() { document.getElementById('ui-balance').innerText = getBal().toLocaleString('vi-VN') + ' VND'; }
+
+const pop=document.getElementById('popup'), drag=document.getElementById('drag-bar');
+let dragPop=false, ox, oy;
+drag.onmousedown=drag.ontouchstart=(e)=>{
+  dragPop=true; const cx=e.touches?e.touches[0].clientX:e.clientX, cy=e.touches?e.touches[0].clientY:e.clientY;
+  const r=pop.getBoundingClientRect(); ox=cx-r.left; oy=cy-r.top;
+  pop.style.transform='none'; pop.style.left=r.left+'px'; pop.style.top=r.top+'px';
+};
+document.onmousemove=document.ontouchmove=(e)=>{
+  if(!dragPop)return; const cx=e.touches?e.touches[0].clientX:e.clientX, cy=e.touches?e.touches[0].clientY:e.clientY;
+  pop.style.left=(cx-ox)+'px'; pop.style.top=(cy-oy)+'px';
+};
+document.onmouseup=document.ontouchend=()=>dragPop=false;
+
+const DUR=60, START=new Date("2026-01-01T00:00:00Z").getTime();
+setInterval(()=>{
+  if(!user)return;
+  const el=Math.floor((Date.now()-START)/1000), idx=Math.floor(el/DUR), left=DUR-(el%DUR);
+  
+  document.getElementById('session-id').innerText = `PHIÊN #${(idx % 999999) + 1}`;
+  document.getElementById('timer').innerText=left;
+  
+  if(left<=5 && !locked && betAmt>0 && !isBetConfirmed) confirmBet(true);
+  
+  if(idx!==lastIdx){ 
+    if(lastIdx===-1) lastIdx=idx; 
+    else { lastIdx=idx; newSession(idx); } 
+  }
+},1000);
+
+function renderDiceFace(val) {
+  let html = '';
+  if (val === 1) html = '<div class="dot red d-center"></div>';
+  if (val === 2) html = '<div class="dot d-tl"></div><div class="dot d-br"></div>';
+  if (val === 3) html = '<div class="dot d-tl"></div><div class="dot red d-center"></div><div class="dot d-br"></div>';
+  if (val === 4) html = '<div class="dot d-tl"></div><div class="dot d-tr"></div><div class="dot d-bl"></div><div class="dot d-br"></div>';
+  if (val === 5) html = '<div class="dot d-tl"></div><div class="dot d-tr"></div><div class="dot red d-center"></div><div class="dot d-bl"></div><div class="dot d-br"></div>';
+  if (val === 6) html = '<div class="dot d-tl"></div><div class="dot d-tr"></div><div class="dot d-ml"></div><div class="dot d-mr"></div><div class="dot d-bl"></div><div class="dot d-br"></div>';
+  return html;
+}
+
+function newSession(idx){
+  locked=true; 
+  isBetConfirmed=false;
+  // KHÔNG RESET betAmt Ở ĐÂY
+  
+  document.getElementById('side-tai').classList.remove('win-effect');
+  document.getElementById('side-xiu').classList.remove('win-effect');
+  document.getElementById('betting-panel').style.display = 'none';
+
+  const timerCircle = document.getElementById('timer-circle');
+  const diceBox = document.getElementById('dice-box');
+  const bowlBox = document.getElementById('bowl-box');
+  const bowl = document.getElementById('bowl');
+  const hint = document.getElementById('hint');
+  
+  timerCircle.style.opacity = '0';
+  diceBox.style.display = 'none'; 
+  
+  bowlBox.style.display = 'block';
+  bowlBox.style.transform = 'translate(0, 0)';
+  bowlBox.style.opacity = '1';
+  bowlBox.style.pointerEvents = 'none'; 
+  bowl.classList.remove('hide');
+  hint.style.display = 'none';
+
+  currentD1 = (idx*13)%6+1;
+  currentD2 = (idx*17)%6+1;
+  currentD3 = (idx*19)%6+1;
+  currentSum = currentD1 + currentD2 + currentD3;
+  currentResult = (currentSum >= 11) ? "tai" : "xiu";
+  
+  setTimeout(()=>{
+    bowl.classList.add('hide');
+    diceBox.style.display = 'flex';
+    document.querySelectorAll('.dice').forEach(d => {
+      d.classList.add('rolling');
+      d.innerHTML = renderDiceFace(Math.floor(Math.random()*6)+1); 
+    });
+    
+    setTimeout(()=>{
+      document.querySelectorAll('.dice').forEach(d => d.classList.remove('rolling'));
+      document.getElementById('d1').innerHTML = renderDiceFace(currentD1);
+      document.getElementById('d1').style.transform = `rotate(${Math.floor(Math.random()*360)}deg)`;
+      document.getElementById('d2').innerHTML = renderDiceFace(currentD2);
+      document.getElementById('d2').style.transform = `rotate(${Math.floor(Math.random()*360)}deg)`;
+      document.getElementById('d3').innerHTML = renderDiceFace(currentD3);
+      document.getElementById('d3').style.transform = `rotate(${Math.floor(Math.random()*360)}deg)`;
+      
+      bowl.classList.remove('hide');
+      
+      setTimeout(() => {
+        bowlBox.style.pointerEvents = 'auto';
+        hint.style.display = 'block';
+        
+        autoOpenTimer = setTimeout(() => {
+          if (!bowl.classList.contains('hide')) {
+            bowlBox.style.transform = 'translate(0, 200px) scale(0.5)';
+            bowlBox.style.opacity = '0';
+            bowlBox.style.pointerEvents = 'none';
+            resolveGameResult();
+          }
+        }, 5000);
+      }, 500);
+    }, 5000); 
+  }, 1000);
+}
+
+function resolveGameResult() {
+  const bowl = document.getElementById('bowl');
+  if (bowl.classList.contains('hide')) return;
+  
+  clearTimeout(autoOpenTimer);
+  bowl.classList.add('hide');
+  
+  historyData.push({res:currentResult, val: currentSum, d1: currentD1, d2: currentD2, d3: currentD3});
+  if(historyData.length > 50) historyData.shift(); 
+  
+  const hb=document.getElementById('mini-chart');
+  let dt=document.createElement('div');
+  dt.className=`h-dot ${currentResult}`; 
+  hb.appendChild(dt);
+  if(hb.children.length>15)hb.removeChild(hb.firstChild);
+
+  if(betAmt>0 && betSide){
+    let win=(currentResult==="tai"&&betSide==="tai")||(currentResult==="xiu"&&betSide==="xiu");
+    if(win){
+      let winAmt = Math.floor(betAmt * 1.98); // TỶ LỆ X1.98
+      let currentBalance = getBal();
+      setBal(currentBalance + winAmt);
+      
+      const target = document.getElementById(betSide === 'tai' ? 'side-tai' : 'side-xiu');
+      target.classList.add('win-effect');
+      
+      for(let i=0; i<30; i++) {
+        let p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = '50%'; p.style.top = '50%';
+        p.style.setProperty('--x', `${(Math.random() - 0.5) * 250}px`);
+        p.style.setProperty('--y', `${(Math.random() - 0.5) * 250}px`);
+        target.appendChild(p);
+        setTimeout(() => p.remove(), 1000);
+      }
+      
+      let title = (betAmt >= 100000000) ? "THẮNG LỚN" : "THẮNG";
+      document.getElementById('win-title').innerText = title;
+      document.getElementById('win-amount').innerText = `+${winAmt.toLocaleString('vi-VN')} VNĐ`;
+      
+      document.getElementById('win-popup').classList.add('show');
+      setTimeout(() => document.getElementById('win-popup').classList.remove('show'), 2500);
+      
+    } else {
+      showToast(`THUA! Mất ${betAmt.toLocaleString('vi-VN')} VNĐ.`, "error");
+    }
+  }
+
+  setTimeout(()=>{
+    document.getElementById('timer-circle').style.opacity = '1';
+    const bb = document.getElementById('bowl-box');
+    bb.style.transform = 'translate(0, 0)';
+    bb.style.opacity = '1';
+    bb.style.pointerEvents = 'none';
+    bb.style.display = 'none';
+    
+    betAmt=0;betSide=null;locked=false;isBetConfirmed=false;
+    resetBetUI();
+  }, 3000);
+}
+
+let dragBowl=false, startX=0, startY=0, currentX=0, currentY=0;
+const bb=document.getElementById('bowl-box');
+bb.onmousedown=bb.ontouchstart=(e)=>{
+  if(document.getElementById('hint').style.display === 'none')return;
+  dragBowl=true; 
+  startX = e.touches?e.touches[0].clientX:e.clientX; 
+  startY = e.touches?e.touches[0].clientY:e.clientY;
+  currentX = 0; currentY = 0;
+  bb.style.transition='none';
+};
+document.onmousemove=document.ontouchmove=(e)=>{
+  if(!dragBowl)return;
+  const clientX = e.touches?e.touches[0].clientX:e.clientX;
+  const clientY = e.touches?e.touches[0].clientY:e.clientY;
+  currentX = clientX - startX;
+  currentY = clientY - startY;
+  bb.style.transform = `translate(${currentX}px, ${currentY}px)`;
+};
+document.onmouseup=document.ontouchend=()=>{
+  if(!dragBowl)return;
+  dragBowl=false; 
+  bb.style.transition='transform 0.4s ease-out, opacity 0.4s';
+  
+  const dist = Math.hypot(currentX, currentY);
+  
+  if(dist>60){
+    bb.style.transform = `translate(${currentX*2}px, ${currentY*2}px)`; 
+    bb.style.opacity='0'; 
+    bb.style.pointerEvents='none';
+    resolveGameResult(); 
+  } else { 
+    bb.style.transform = 'translate(0, 0)'; 
+  }
+};
+
+function openSoiCau() {
+  document.getElementById('soicau-modal').style.display = 'flex';
+  
+  if(historyData.length > 0) {
+    let last = historyData[historyData.length-1];
+    let lastSession = (lastIdx % 999999) + 1;
+    document.getElementById('latest-info').innerText = `Phiên gần nhất: #${lastSession} | ${last.res.toUpperCase()} (${last.d1}-${last.d2}-${last.d3})`;
+  } else {
+    document.getElementById('latest-info').innerText = `Chưa có dữ liệu phiên`;
+  }
+
+  renderChart();
+  renderBeadPlate();
+  renderTable();
+  slideIndex = 0;
+  updateSlide();
+}
+
+function renderChart() {
+  const canvas = document.getElementById('chartCanvas');
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width - 20;
+  canvas.height = rect.height - 20;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const padding = 30;
+  const chartHeight = (h - padding) / 2 - 10; 
+  const chartWidth = w - padding * 2;
+  const data = historyData.slice(-20); 
+  const stepX = chartWidth / (data.length > 1 ? data.length - 1 : 1);
+
+  function drawGrid(yOffset, min, max, steps) {
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)'; 
+    ctx.lineWidth = 1;
+    ctx.font = '12px Roboto';
+    ctx.fillStyle = '#d4af37';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    
+    for(let i=0; i<=steps; i++) {
+      let val = min + (i * (max-min)/steps);
+      let y = yOffset + chartHeight - (i * chartHeight / steps);
+      ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(w - padding, y); ctx.stroke();
+      ctx.fillText(val, padding - 10, y);
+    }
+  }
+
+  drawGrid(10, 3, 18, 5); 
+  drawGrid(chartHeight + 20, 1, 6, 5); 
+
+  function drawLine(yOffset, min, max, getter, color, lineWidth=2) {
+    if(data.length === 0) return;
+    ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = lineWidth; ctx.lineJoin = 'round';
+    data.forEach((d, i) => {
+      let val = getter(d);
+      if (val < min) val = min; if (val > max) val = max;
+      let x = padding + i * stepX;
+      let y = yOffset + chartHeight - ((val - min) / (max - min) * chartHeight);
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    data.forEach((d, i) => {
+      let val = getter(d);
+      if (val < min) val = min; if (val > max) val = max;
+      let x = padding + i * stepX;
+      let y = yOffset + chartHeight - ((val - min) / (max - min) * chartHeight);
+      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+    });
+  }
+
+  drawLine(10, 3, 18, d => d.val, '#ffd700', 3);
+  drawLine(chartHeight + 20, 1, 6, d => d.d1, '#ff69b4', 2);
+  drawLine(chartHeight + 20, 1, 6, d => d.d2, '#ff0000', 2);
+  drawLine(chartHeight + 20, 1, 6, d => d.d3, '#00ff7f', 2);
+}
+
+function renderBeadPlate() {
+  const grid = document.getElementById('bead-grid');
+  grid.innerHTML = '';
+  const data = historyData.slice(-45); 
+  data.forEach((d) => {
+    let div = document.createElement('div');
+    div.className = `bead-circle ${d.res}`;
+    grid.appendChild(div);
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+  const data = historyData.slice(-45); 
+  let columns = [];
+  for(let i=0; i<data.length; i+=6) { columns.push(data.slice(i, i+6)); }
+  for(let row = 0; row < 6; row++) {
+    let tr = document.createElement('tr');
+    columns.forEach(col => {
+      let td = document.createElement('td');
+      if(col[row]) { td.innerHTML = `<div class="sum-circle">${col[row].val}</div>`; }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+function slideNext(dir) {
+  slideIndex += dir;
+  if(slideIndex < 0) slideIndex = 0;
+  if(slideIndex > 1) slideIndex = 1;
+  updateSlide();
+}
+
+function updateSlide() {
+  const container = document.getElementById('slides-container');
+  container.style.transform = `translateX(-${slideIndex * 50}%)`;
+  document.getElementById('arrow-left').style.display = (slideIndex === 0) ? 'none' : 'flex';
+  document.getElementById('arrow-right').style.display = (slideIndex === 1) ? 'none' : 'flex';
+  if (slideIndex === 0) renderChart();
+}
+
+function sel(s){
+  if(locked)return showToast("Đã khóa cược phiên này!", "error");
+  if(isBetConfirmed && betSide !== s) return showToast("Bạn đã đặt cược phiên này rồi!", "error");
+  
+  betSide = s;
+  document.getElementById('betting-panel').style.display = 'flex';
+  
+  document.getElementById('btn-tai').innerText=(s==='tai')?(isBetConfirmed?"ĐÃ CƯỢC":"CƯỢC"):"KHÓA";
+  document.getElementById('btn-tai').className=(s==='tai')?"btn-bet sel":"btn-bet";
+  document.getElementById('btn-xiu').innerText=(s==='xiu')?(isBetConfirmed?"ĐÃ CƯỢC":"CƯỢC"):"KHÓA";
+  document.getElementById('btn-xiu').className=(s==='xiu')?"btn-bet sel":"btn-bet";
+  
+  document.getElementById('amt-tai').innerText=(s==='tai')?betAmt.toLocaleString('vi-VN'):"0";
+  document.getElementById('amt-xiu').innerText=(s==='xiu')?betAmt.toLocaleString('vi-VN'):"0";
+}
+
+function add(a){
+  if(locked)return showToast("Đã khóa cược phiên này!", "error");
+  if(!betSide)return showToast("Chọn cửa trước!", "error"); 
+  betAmt = (a === 'all') ? getBal() : betAmt + a;
+  if(betAmt > getBal()) betAmt = getBal();
+  
+  document.getElementById('amt-tai').innerText=betSide==='tai'?betAmt.toLocaleString('vi-VN'):"0";
+  document.getElementById('amt-xiu').innerText=betSide==='xiu'?betAmt.toLocaleString('vi-VN'):"0";
+}
+
+function hideBetPanel() {
+  document.getElementById('betting-panel').style.display = 'none';
+}
+
+function resetBetUI(){
+  document.getElementById('btn-tai').innerText="CƯỢC";document.getElementById('btn-tai').classList.remove('sel');
+  document.getElementById('btn-xiu').innerText="CƯỢC";document.getElementById('btn-xiu').classList.remove('sel');
+  document.getElementById('amt-tai').innerText="0";document.getElementById('amt-xiu').innerText="0";
+}
+
+function confirmBet(s=false){
+  if(locked)return showToast("Đã khóa cược phiên này!", "error");
+  if(!betSide || betAmt===0) return !s && showToast("Vui lòng chọn cửa và mức cược trước!", "error");
+  if(betAmt>getBal())return showToast("Không đủ số dư!", "error");
+  
+  setBal(getBal() - betAmt);
+  isBetConfirmed = true;
+  if(!s)showToast("Đặt cược thành công!", "success");
+}
+
+window.addEventListener('resize', () => {
+  if(document.getElementById('soicau-modal').style.display === 'flex' && slideIndex === 0) {
+    renderChart();
+  }
+});
+</script>
+</body>
+</html>
